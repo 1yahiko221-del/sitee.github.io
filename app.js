@@ -199,6 +199,7 @@ const el = {
   reel: $('reel'), strip: $('reel-strip'), hint: $('reel-hint'), status: $('reel-status'),
   btnRoll: $('btn-roll'), btnReset: $('btn-reset'), btnHistory: $('btn-history'), btnRefresh: $('btn-refresh'), btnClearHistory: $('btn-clear-history'),
   modalInfo: $('modal-info'), infoCategory: $('info-category'), infoCounter: $('info-counter'), infoTerm: $('info-term'), infoTermEn: $('info-term-en'), infoDescription: $('info-description'), infoSource: $('info-source'), btnCloseInfo: $('btn-close-info'), btnInfoNext: $('btn-info-next'), btnInfoLearn: $('btn-info-learn'), btnInfoLearnText: $('btn-info-learn-text'),
+  infoDescWrap: $('info-desc-wrap'), btnInfoExpand: $('btn-info-expand'), btnInfoExpandText: $('btn-info-expand-text'),
   modalHistory: $('modal-history'), historyList: $('history-list'), historyToday: $('history-today'), btnCloseHistory: $('btn-close-history'),
   modalConfirmReset: $('modal-confirm-reset'), btnCancelReset: $('btn-cancel-reset'), btnConfirmReset: $('btn-confirm-reset'),
   toast: $('toast'), toastText: $('toast-text'), toastClose: $('toast-close'),
@@ -550,6 +551,56 @@ function updateInfoLearnButton() {
   el.btnInfoLearn.classList.toggle('is-active', learned);
   el.btnInfoLearnText.textContent = learned ? 'Изучено' : 'Отметить изученным';
 }
+
+/* === Раскрытие описания === */
+function resetDescriptionCollapse() {
+  if (!el.infoDescWrap || !el.btnInfoExpand) return;
+  el.infoDescWrap.classList.remove('is-collapsed', 'is-expanded');
+  el.infoDescWrap.style.maxHeight = '';
+  el.btnInfoExpand.classList.remove('is-expanded');
+  el.btnInfoExpand.hidden = true;
+  el.btnInfoExpandText.textContent = 'Показать полностью';
+}
+
+function updateDescriptionCollapse() {
+  if (!el.infoDescWrap || !el.btnInfoExpand || !el.infoDescription) return;
+
+  // Сброс прошлого состояния, чтобы корректно замерить реальную высоту текста
+  el.infoDescWrap.classList.remove('is-collapsed', 'is-expanded');
+  el.infoDescWrap.style.maxHeight = 'none';
+  el.btnInfoExpand.hidden = true;
+
+  requestAnimationFrame(() => {
+    const fullHeight = el.infoDescription.scrollHeight;
+    const lineHeight = parseFloat(getComputedStyle(el.infoDescription).lineHeight) || 24;
+    const collapsedHeight = lineHeight * 5; // порог: 5 строк
+
+    if (fullHeight > collapsedHeight + 2) {
+      el.infoDescWrap.classList.add('is-collapsed');
+      el.btnInfoExpand.hidden = false;
+    } else {
+      el.infoDescWrap.style.maxHeight = '';
+    }
+  });
+}
+
+function toggleDescription() {
+  if (!el.infoDescWrap || !el.btnInfoExpand) return;
+  const isExpanded = el.infoDescWrap.classList.contains('is-expanded');
+  if (isExpanded) {
+    el.infoDescWrap.classList.remove('is-expanded');
+    el.infoDescWrap.classList.add('is-collapsed');
+    el.btnInfoExpand.classList.remove('is-expanded');
+    el.btnInfoExpandText.textContent = 'Показать полностью';
+    el.modalInfo.querySelector('.modal__content')?.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    el.infoDescWrap.classList.remove('is-collapsed');
+    el.infoDescWrap.classList.add('is-expanded');
+    el.btnInfoExpand.classList.add('is-expanded');
+    el.btnInfoExpandText.textContent = 'Свернуть';
+  }
+}
+
 function openInfoModal(term = currentTerm, options = {}) {
   if (!term) return;
   currentTerm = term;
@@ -570,7 +621,14 @@ function openInfoModal(term = currentTerm, options = {}) {
   const position = all.findIndex(t => t.id === term.id);
   el.infoCounter.textContent = position >= 0 ? `${position + 1} / ${all.length}` : '';
   updateInfoLearnButton();
+
+  // Сброс и пересчёт обрезки описания
+  resetDescriptionCollapse();
+
   openModal(el.modalInfo);
+
+  // После открытия модалки считаем высоту (элемент должен быть видим)
+  requestAnimationFrame(() => updateDescriptionCollapse());
 }
 
 function renderHistory() {
@@ -625,6 +683,7 @@ function initCursorGlow() {
   if (window.matchMedia('(hover: none)').matches) return;
   if (reducedMotionMQ.matches) return;
 
+  // Размер берём прямо из элемента — при смене width/height в CSS ничего править не надо.
   const rect = glow.getBoundingClientRect();
   const halfW = rect.width / 2;
   const halfH = rect.height / 2;
@@ -694,6 +753,7 @@ function bindEvents() {
   el.btnCloseHistory.addEventListener('click',()=>closeModal(el.modalHistory)); el.btnCloseInfo.addEventListener('click',()=>closeModal(el.modalInfo));
   el.btnCancelReset.addEventListener('click',()=>closeModal(el.modalConfirmReset)); el.btnConfirmReset.addEventListener('click',doResetProgress);
   el.btnInfoLearn.addEventListener('click',()=>currentTerm&&toggleLearned(currentTerm.id));
+  el.btnInfoExpand?.addEventListener('click', toggleDescription);
   el.btnInfoNext.addEventListener('click',()=>{ closeModal(el.modalInfo); setTimeout(startRoll,120); });
   el.toastClose.addEventListener('click',closeToast);
   [el.modalInfo,el.modalHistory,el.modalConfirmReset].forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m);}));
@@ -701,7 +761,14 @@ function bindEvents() {
     if (e.code==='Escape') { closeTopModal(); closeToast(); return; }
     if (e.code==='Space' && !isAnyModalOpen() && !['INPUT','TEXTAREA','SELECT','BUTTON'].includes(e.target.tagName)) { e.preventDefault(); startRoll(); }
   });
-  window.addEventListener('resize',()=>{syncItemHeight(); if(currentTerm&&!isRolling){const center=el.strip.querySelector('.is-center'); if(center){const idx=[...el.strip.children].indexOf(center); if(idx>=0)positionStripInstant(idx);}}});
+  window.addEventListener('resize',()=>{
+    syncItemHeight();
+    if(currentTerm&&!isRolling){
+      const center=el.strip.querySelector('.is-center');
+      if(center){const idx=[...el.strip.children].indexOf(center); if(idx>=0)positionStripInstant(idx);}
+    }
+    if (el.modalInfo?.classList.contains('is-open')) updateDescriptionCollapse();
+  });
   const motionChange=()=>{if(reducedMotionMQ.matches&&activeRollAnimation){const idx=[...el.strip.children].indexOf(el.strip.querySelector('.is-center')); cancelAnimation(); if(idx>=0)positionStripInstant(idx); isRolling=false; el.btnRoll.disabled=false; el.reel.classList.remove('is-rolling');}};
   reducedMotionMQ.addEventListener?.('change',motionChange);
   el.reel.addEventListener('pointerdown', e=>{touchStartY=e.clientY;touchStartX=e.clientX;});
@@ -711,10 +778,7 @@ function bindEvents() {
 function init() {
   loadState();
 
-  // Пытаемся поднять сохранённый в браузере список терминов с Wikipedia.
   const cacheFresh = loadCachedOnlineTerms();
-
-  // Если кэша нет вообще — используем только встроенный набор.
   if (!cacheFresh) {
     jsonTerms = FALLBACK_TERMS;
   }
@@ -726,9 +790,8 @@ function init() {
   if (!restoreLastTerm() && !shouldShowHint()) hideHint();
   updateHint();
 
-  // Сетевой запрос к Wikipedia делаем ТОЛЬКО при первом запуске (когда кэша нет).
-  // При последующих перезагрузках список берётся из localStorage и не обновляется сам —
-  // обновление происходит только по нажатию кнопки ⟳.
+  // Сетевой запрос к Wikipedia — только при первом запуске (когда кэша нет).
+  // Дальше список берётся из localStorage, обновление — только по кнопке ⟳.
   if (!cacheFresh) {
     loadOnlineTerms({ silent: false }).catch(() => {});
   }
