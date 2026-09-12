@@ -229,7 +229,66 @@ kbd { padding: 2px 7px; border: 1px solid var(--border-strong); border-bottom-co
 .modal__title { font-size: 1.75rem; line-height: 1.1; letter-spacing: -.035em; font-weight: 850; }
 .modal__term-en { margin-top: 7px; color: #747e92; font: 500 .74rem 'JetBrains Mono', monospace; }
 .modal__divider { height: 1px; margin: 20px 0; background: linear-gradient(90deg,var(--border-strong),transparent); }
-.modal__description { color: #c7cddb; font-size: .97rem; line-height: 1.78; }
+
+/* === Описание с раскрытием === */
+.modal__desc-wrap {
+  position: relative;
+  overflow: hidden;
+  transition: max-height .35s var(--ease);
+}
+.modal__desc-wrap.is-collapsed {
+  max-height: calc(1.78em * 5); /* ~5 строк */
+}
+.modal__desc-wrap.is-collapsed::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 48px;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent, #10131c 85%);
+}
+.modal__desc-wrap.is-expanded {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.modal__description {
+  color: #c7cddb;
+  font-size: .97rem;
+  line-height: 1.78;
+}
+
+.modal__expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: rgba(255,255,255,.03);
+  color: #9cb0d6;
+  font-size: .74rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s var(--ease), color .2s var(--ease), border-color .2s var(--ease);
+}
+.modal__expand-btn:hover {
+  background: rgba(125,103,255,.08);
+  border-color: rgba(125,103,255,.28);
+  color: #cdd8ec;
+}
+.modal__expand-btn[hidden] { display: none; }
+.modal__expand-icon {
+  display: inline-block;
+  transition: transform .25s var(--ease);
+  font-size: .8rem;
+  line-height: 1;
+}
+.modal__expand-btn.is-expanded .modal__expand-icon {
+  transform: rotate(180deg);
+}
+
 .modal__actions { display: flex; justify-content: flex-end; gap: 9px; margin-top: 24px; }
 
 .btn { min-height: 42px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--border-strong); background: rgba(255,255,255,.035); color: var(--text); font-size: .82rem; font-weight: 700; cursor: pointer; transition: transform .2s var(--ease), background .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease); }
@@ -309,6 +368,9 @@ kbd { padding: 2px 7px; border: 1px solid var(--border-strong); border-bottom-co
   .modal__content { max-height: 88vh; padding: 22px 17px; border-radius: 20px; }
   .modal__title { font-size: 1.42rem; }
   .modal__description { font-size: .9rem; }
+  .modal__expand-btn { font-size: .72rem; padding: 6px 9px; }
+  .modal__desc-wrap.is-collapsed { max-height: calc(1.7em * 5); }
+  .modal__desc-wrap.is-expanded { max-height: 55vh; }
   .modal__actions { flex-direction: column-reverse; }
   .modal__actions .btn, .form__actions .btn { width: 100%; }
   .form__actions { flex-direction: column-reverse; }
