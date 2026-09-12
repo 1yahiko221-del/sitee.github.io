@@ -12,7 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
 
@@ -70,7 +70,13 @@
     <h3 class="modal__title" id="info-term">—</h3>
     <div class="modal__term-en" id="info-term-en"></div>
     <div class="modal__divider"></div>
-    <p class="modal__description" id="info-description">—</p>
+    <div class="modal__desc-wrap" id="info-desc-wrap">
+      <p class="modal__description" id="info-description">—</p>
+    </div>
+    <button type="button" class="modal__expand-btn" id="btn-info-expand" hidden>
+      <span id="btn-info-expand-text">Показать полностью</span>
+      <span class="modal__expand-icon" aria-hidden="true">▾</span>
+    </button>
     <a class="modal__source" id="info-source" href="#" target="_blank" rel="noopener noreferrer" hidden>Источник: Wikipedia ↗</a>
     <div class="modal__actions">
       <button type="button" class="btn btn--ghost" id="btn-info-next">Следующий</button>
@@ -115,6 +121,6 @@
   <button type="button" class="toast__close" id="toast-close" aria-label="Закрыть">×</button>
 </div>
 
-<script src="app.js"></script>
+<script src="app.js?v=4"></script>
 </body>
 </html>
