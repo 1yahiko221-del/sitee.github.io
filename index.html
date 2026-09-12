@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#080a10">
+<meta name="description" content="Интерактивный ролл концептов — изучайте идеи, эффекты, парадоксы и принципы в случайном порядке.">
+<title>Ролл концептов — изучай идеи случайно</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="bg-grid" aria-hidden="true"></div>
+<div class="cursor-glow" id="cursor-glow" aria-hidden="true"></div>
+
+<header class="header">
+  <div class="header__brand">
+    <div class="header__logo" aria-hidden="true">✦</div>
+    <div>
+      <h1 class="header__title">Ролл концептов</h1>
+      <p class="header__subtitle">Одна идея за раз</p>
+    </div>
+  </div>
+  <nav class="header__actions" aria-label="Действия">
+    <button id="btn-refresh" class="icon-btn" title="Обновить список терминов" aria-label="Обновить список терминов">⟳</button>
+    <button id="btn-history" class="icon-btn" title="Открыть историю" aria-label="Открыть историю">◷</button>
+    <button id="btn-reset" class="icon-btn icon-btn--danger" title="Сбросить прогресс" aria-label="Сбросить прогресс">↺</button>
+  </nav>
+</header>
+
+<main class="main">
+  <section class="reel-shell" aria-label="Случайный термин">
+    <div class="reel" id="reel" title="Нажми, чтобы роллить" tabindex="0" role="button" aria-label="Выбрать случайный термин">
+      <div class="reel__viewport" id="reel-viewport">
+        <div class="reel__rail" aria-hidden="true"></div>
+        <div class="reel__strip" id="reel-strip"></div>
+      </div>
+      <div class="reel__hint" id="reel-hint">
+        <span class="reel__hint-icon">↯</span>
+        <span class="reel__hint-text">Нажми, чтобы бросить</span>
+      </div>
+      <div class="reel__status" id="reel-status" aria-live="polite">Готово</div>
+    </div>
+  </section>
+</main>
+
+<div class="controls">
+  <button id="btn-roll" class="roll-btn" type="button">
+    <span class="roll-btn__icon" aria-hidden="true">✦</span>
+    <span>Бросить кубик</span>
+  </button>
+  <p class="controls__tip">После ролла подробности откроются автоматически. Нажми на карточку — чтобы бросить снова.</p>
+</div>
+
+<div class="modal" id="modal-info" role="dialog" aria-modal="true" aria-labelledby="info-term" aria-hidden="true">
+  <div class="modal__content modal__content--info">
+    <div class="modal__head">
+      <div>
+        <span class="modal__category" id="info-category">—</span>
+        <span class="modal__counter" id="info-counter"></span>
+      </div>
+      <button type="button" class="modal__close" id="btn-close-info" aria-label="Закрыть">×</button>
+    </div>
+    <h3 class="modal__title" id="info-term">—</h3>
+    <div class="modal__term-en" id="info-term-en"></div>
+    <div class="modal__divider"></div>
+    <p class="modal__description" id="info-description">—</p>
+    <a class="modal__source" id="info-source" href="#" target="_blank" rel="noopener noreferrer" hidden>Источник: Wikipedia ↗</a>
+    <div class="modal__actions">
+      <button type="button" class="btn btn--ghost" id="btn-info-next">Следующий</button>
+      <button type="button" class="btn btn--success" id="btn-info-learn"><span>✓</span><span id="btn-info-learn-text">Изучено</span></button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal-history" role="dialog" aria-modal="true" aria-labelledby="history-title" aria-hidden="true">
+  <div class="modal__content modal__content--wide">
+    <div class="modal__head">
+      <div>
+        <span class="modal__kicker">ТВОЙ ПУТЬ</span>
+        <h3 class="modal__title" id="history-title">История</h3>
+      </div>
+      <div class="modal__head-actions">
+        <button type="button" class="text-btn text-btn--danger" id="btn-clear-history">Очистить</button>
+        <button type="button" class="modal__close" id="btn-close-history" aria-label="Закрыть">×</button>
+      </div>
+    </div>
+    <p class="history__today" id="history-today"></p>
+    <ul class="history__list" id="history-list"></ul>
+  </div>
+</div>
+
+<div class="modal" id="modal-confirm-reset" role="dialog" aria-modal="true" aria-labelledby="reset-title" aria-hidden="true">
+  <div class="modal__content modal__content--small">
+    <span class="modal__kicker">ВНИМАНИЕ</span>
+    <h3 class="modal__title" id="reset-title">Сбросить прогресс?</h3>
+    <div class="modal__divider"></div>
+    <p class="modal__description">Все изученные термины вернутся в пул. История сохранится.</p>
+    <div class="form__actions">
+      <button type="button" class="btn btn--ghost" id="btn-cancel-reset">Отмена</button>
+      <button type="button" class="btn btn--danger" id="btn-confirm-reset">Сбросить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast__icon" aria-hidden="true">!</span>
+  <span class="toast__text" id="toast-text"></span>
+  <button type="button" class="toast__close" id="toast-close" aria-label="Закрыть">×</button>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
